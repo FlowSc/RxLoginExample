@@ -14,7 +14,7 @@ protocol LoginViewBindable {
     var loginBtnTouched:PublishRelay<Void> { get }
     var idTfValueChanged:PublishRelay<String?> { get }
     var pwTfValueChanged:PublishRelay<String?> { get }
-    var loginInfo:PublishSubject<User?> { get }
+    var loginUser:PublishSubject<User?> { get }
     
 }
 
@@ -22,8 +22,7 @@ protocol LoginViewBindable {
 class LoginViewModel: LoginViewBindable {
     
     
-    var loginInfo: PublishSubject<User?> = PublishSubject<User?>()
-    var errorInfo: PublishSubject<String> = PublishSubject<String>()
+    var loginUser: PublishSubject<User?> = PublishSubject<User?>()
     
     var loginBtnTouched: PublishRelay<Void> = PublishRelay<Void>()
     
@@ -33,8 +32,8 @@ class LoginViewModel: LoginViewBindable {
     
     let disposeBag = DisposeBag()
     
-    var checkLogin:Observable<LoginInfo> {
-        return Observable.combineLatest(idTfValueChanged.asObservable(), pwTfValueChanged.asObservable()) {
+    var loginInfo:Observable<LoginInfo> {
+        return Observable.combineLatest(idTfValueChanged, pwTfValueChanged) {
             id, pw in
             
             return LoginInfo.init(id: id, pw: pw)
@@ -44,18 +43,16 @@ class LoginViewModel: LoginViewBindable {
     init(model:LoginModel = LoginModel()) {
         
 
-        loginBtnTouched.withLatestFrom(checkLogin).flatMapLatest{
+        loginBtnTouched.withLatestFrom(loginInfo).flatMapLatest{
             return model.login(info: $0).materialize()
             }.subscribe(onNext: { [unowned self] (event) in
                 switch event {
                 case .next(let user):
-                    self.loginInfo.onNext(user)
-                    
-                case .error(let error):
-                    self.errorInfo.onNext(error.localizedDescription)
+                    self.loginUser.onNext(user)
+                case .error(_):
+                    self.loginUser.onNext(nil)
                 case .completed:
                     print("COMPLTED")
-                    
                 }
             }).disposed(by: disposeBag)
         

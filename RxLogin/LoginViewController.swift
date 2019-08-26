@@ -41,20 +41,19 @@ class LoginViewController: UIViewController {
 extension LoginViewController: BaseViewControllerAttributes {
     
     func bindRx() {
-        print("BINDRX")
-        
         idTf.rx.text.orEmpty.bind(to: viewModel.idTfValueChanged).disposed(by: disposeBag)
         pwTf.rx.text.orEmpty.bind(to: viewModel.pwTfValueChanged).disposed(by: disposeBag)
         
         loginBtn.rx.tap.bind(to: viewModel.loginBtnTouched).disposed(by: disposeBag)
         
-        viewModel.loginInfo.subscribe(onNext: { (user) in
+        viewModel.loginUser.subscribe(onNext: { (user) in
             print(user)
             print("Login SUCCESS")
         }).disposed(by: disposeBag)
     }
     
     func setUI() {
+        
         self.view.backgroundColor = .white
         self.view.addSubview(idTf)
         self.view.addSubview(pwTf)
